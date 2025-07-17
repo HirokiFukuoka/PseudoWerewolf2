@@ -11,10 +11,10 @@
     }
     h1 {
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 15px;
     }
     #intro {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       line-height: 1.5;
       text-align: center;
     }
@@ -84,11 +84,14 @@
 <body>
   <h1>擬似人狼ゲーム2</h1>
   <div id="intro">
-    16枚のコインのうち12枚は本物、4枚は偽物です。本物は偽物よりも僅かに重いです。<br>
+    16枚のコインのうち12枚は本物、4枚は偽物です。<br>
+    本物は偽物よりも僅かに重いです。<br>
     計量器には、コインを1枚から16枚乗せられます。<br>
-    計量器を使うたびに、本物コインが１枚消滅します(消滅するコインは、計量器の上にあるものか外にあるものかを選択できます)。<br>
+    計量器を使うたびに、本物コインが１枚消滅します<br>
+    (消滅するコインは、計量器の上にあるものか外にあるものかを選択できます)。<br>
     次に、あなたは任意の１枚を廃棄します。<br>
-    7回以内に偽物を全廃棄できれば成功。偽物が残存コインの半数以上になると失敗です。
+    7回以内に偽物を全廃棄できれば成功。<br>
+    偽物が残存コインの半数以上になると失敗です。
   </div>
 
   <div id="status">計量器使用: 0/7 (残り7回)</div>
@@ -101,7 +104,7 @@
   </div>
 
   <div id="group-choice" style="display:none;">
-    <p>CPUに対し、どこからコインを捨てるように指示しますか？</p>
+    <p>どこからコインを捨てるように指示しますか？</p>
     <button id="choose-on">計量器に乗せたコインから</button>
     <button id="choose-off">計量器の外のコインから</button>
   </div>
@@ -258,7 +261,7 @@
       hideGroupChoice();
 
       awaitingPlayerDiscard = true;
-      addResult('任意のコインを1つ廃棄してください');
+      addResult('任意のコインを1枚廃棄してください');
       renderCoins();
     }
 
