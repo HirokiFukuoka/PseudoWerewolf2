@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>APL対BPL：体重計コインゲーム</title>
+  <title>APL対CPU：計量器コインゲーム</title>
   <style>
     body {
       font-family: sans-serif;
@@ -11,7 +11,12 @@
     }
     h1 {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
+    }
+    #intro {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 1em;
     }
     #status {
       text-align: center;
@@ -73,20 +78,24 @@
   </style>
 </head>
 <body>
-  <h1>APL対BPL：体重計コインゲーム</h1>
-  <div id="status">体重計使用: 0/7 (残り7回)</div>
+  <h1>APL対CPU：計量器コインゲーム</h1>
+  <div id="intro">
+    プレイヤー（APL）は計量器を使って重さを測定し、CPUが本物コインを廃棄、さらにプレイヤー自身もコインを廃棄します。  
+    7回以内に偽物を全て廃棄すれば勝利。偽物が残存コインの半数以上になると失敗です。
+  </div>
 
+  <div id="status">計量器使用: 0/7 (残り7回)</div>
   <div id="coin-container"></div>
 
   <div id="controls">
-    <button id="weigh">体重計で量る</button>
+    <button id="weigh">計量器で量る</button>
     <button id="clear-selection">選択クリア</button>
     <button id="reset" style="display:none;">次のゲーム</button>
   </div>
 
   <div id="group-choice" style="display:none;">
-    <button id="choose-on">秤に乗せたコインから</button>
-    <button id="choose-off">秤の外のコインから</button>
+    <button id="choose-on">計量器に乗せたコインから</button>
+    <button id="choose-off">計量器の外のコインから</button>
   </div>
 
   <div id="result"></div>
@@ -96,43 +105,40 @@
     const FAKE_WEIGHT = 9;
     const MAX_WEIGHS = 7;
 
-    let coins = [];         // {id, type:'A'|'B', status:'active'|'removed'}
-    let fakesList = [];     // 正解のB番号
+    let coins = [];
+    let fakesList = [];
     let selected = new Set();
     let weighCount = 0;
     let awaitingGroup = false;
     let awaitingPlayerDiscard = false;
-    let lastWeighed = [];   // 今回量ったコインのID
+    let lastWeighed = [];
 
-    const statusDiv = document.getElementById('status');
+    const statusDiv     = document.getElementById('status');
     const coinContainer = document.getElementById('coin-container');
-    const resultDiv = document.getElementById('result');
-    const weighBtn = document.getElementById('weigh');
-    const clearSelBtn = document.getElementById('clear-selection');
-    const groupDiv = document.getElementById('group-choice');
-    const chooseOnBtn = document.getElementById('choose-on');
-    const chooseOffBtn = document.getElementById('choose-off');
-    const resetBtn = document.getElementById('reset');
+    const resultDiv     = document.getElementById('result');
+    const weighBtn      = document.getElementById('weigh');
+    const clearSelBtn   = document.getElementById('clear-selection');
+    const groupDiv      = document.getElementById('group-choice');
+    const chooseOnBtn   = document.getElementById('choose-on');
+    const chooseOffBtn  = document.getElementById('choose-off');
+    const resetBtn      = document.getElementById('reset');
 
     function init() {
-      // コイン生成・シャッフル偽物
       coins = [];
       for (let i = 1; i <= 16; i++) {
         coins.push({ id: i, type: 'A', status: 'active' });
       }
       let fakes = new Set();
-      while (fakes.size < 4) {
-        fakes.add(Math.ceil(Math.random() * 16));
-      }
-      fakesList = Array.from(fakes).sort((a,b)=>a-b);
+      while (fakes.size < 4) fakes.add(Math.ceil(Math.random() * 16));
+      fakesList = Array.from(fakes).sort((a, b) => a - b);
       coins.forEach(c => { if (fakes.has(c.id)) c.type = 'B'; });
 
-      // 状態初期化
       selected.clear();
       weighCount = 0;
       awaitingGroup = false;
       awaitingPlayerDiscard = false;
       lastWeighed = [];
+
       updateStatus();
       clearResult();
       hideGroupChoice();
@@ -145,7 +151,7 @@
 
     function updateStatus() {
       const remain = MAX_WEIGHS - weighCount;
-      statusDiv.textContent = `体重計使用: ${weighCount}/${MAX_WEIGHS} (残り${remain}回)`;
+      statusDiv.textContent = `計量器使用: ${weighCount}/${MAX_WEIGHS} (残り${remain}回)`;
     }
 
     function clearResult() {
@@ -160,22 +166,26 @@
       coinContainer.innerHTML = '';
       coins.forEach(c => {
         const btn = document.createElement('div');
-        btn.className = 'coin' + (c.status==='removed'? ' removed':'') + (selected.has(c.id)? ' selected':'');
-        btn.textContent = (c.status==='removed'? '': c.id);
+        let cls = 'coin';
+        if (c.status === 'removed') cls += ' removed';
+        else if (selected.has(c.id)) cls += ' selected';
+        btn.className = cls;
+        btn.textContent = c.status === 'removed' ? '' : c.id;
         btn.onclick = () => onCoinClick(c.id);
         coinContainer.appendChild(btn);
       });
     }
 
     function onCoinClick(id) {
-      const c = coins.find(x=>x.id===id);
+      const c = coins.find(x => x.id === id);
       if (!c || c.status !== 'active') return;
+
       if (awaitingPlayerDiscard) {
         playerDiscard(id);
         return;
       }
       if (awaitingGroup) return;
-      // 選択トグル
+
       if (selected.has(id)) selected.delete(id);
       else selected.add(id);
       renderCoins();
@@ -190,98 +200,90 @@
     weighBtn.onclick = () => {
       if (awaitingGroup || awaitingPlayerDiscard) return;
       if (weighCount >= MAX_WEIGHS) {
-        addResult('もう体重計は使えません');
+        addResult('もう計量器は使えません');
         return;
       }
       if (selected.size === 0) {
         addResult('まずコインを選択してください');
         return;
       }
-      // 量る
+
       weighCount++;
       updateStatus();
       clearResult();
+
       lastWeighed = Array.from(selected);
-      const total = lastWeighed.reduce((sum,id) => {
-        const c = coins.find(x=>x.id===id);
-        return sum + (c.type==='A'?REAL_WEIGHT:FAKE_WEIGHT);
+      const total = lastWeighed.reduce((sum, id) => {
+        const c = coins.find(x => x.id === id);
+        return sum + (c.type === 'A' ? REAL_WEIGHT : FAKE_WEIGHT);
       }, 0);
-      addResult(`体重計の重さ: ${total}g`);
-      // 次はグループ選択
+      addResult(`計量器の重さ: ${total}g`);
+
       awaitingGroup = true;
       showGroupChoice();
     };
 
     function showGroupChoice() {
       groupDiv.style.display = 'block';
-      // 秤内／外でAがいるかチェックしてボタン活性化
-      const onA = lastWeighed.filter(id => {
-        const c = coins.find(x=>x.id===id);
-        return c.status==='active' && c.type==='A';
-      }).length;
+      // CPUがどちらから廃棄できるか判定
+      const onA  = lastWeighed.filter(id => coins.find(c=>c.id===id).type==='A').length;
       const offA = coins.filter(c=>c.status==='active' && !lastWeighed.includes(c.id) && c.type==='A').length;
-      chooseOnBtn.disabled = onA===0;
-      chooseOffBtn.disabled = offA===0;
+      chooseOnBtn.disabled  = onA  === 0;
+      chooseOffBtn.disabled = offA === 0;
     }
 
     function hideGroupChoice() {
       groupDiv.style.display = 'none';
     }
 
-    chooseOnBtn.onclick = () => groupDiscard(true);
+    chooseOnBtn.onclick  = () => groupDiscard(true);
     chooseOffBtn.onclick = () => groupDiscard(false);
 
     function groupDiscard(fromOnScale) {
-      // BPLが本物を1個廃棄
-      const pool = coins.filter(c=> 
-        c.status==='active' &&
-        c.type==='A' &&
+      const pool = coins.filter(c => 
+        c.status==='active' && c.type==='A' &&
         (fromOnScale ? lastWeighed.includes(c.id) : !lastWeighed.includes(c.id))
       );
-      const drop = pool[Math.floor(Math.random()*pool.length)];
+      const drop = pool[Math.floor(Math.random() * pool.length)];
       drop.status = 'removed';
-      addResult(`BPLが${drop.id}番の本物を廃棄しました`);
+      addResult(`CPUが${drop.id}番の本物を廃棄しました`);
       awaitingGroup = false;
       hideGroupChoice();
-      // 次はプレイヤー廃棄
+
       awaitingPlayerDiscard = true;
       addResult('APL、任意のコインを1つ廃棄してください');
       renderCoins();
     }
 
     function playerDiscard(id) {
-      const c = coins.find(x=>x.id===id);
-      if (!c || c.status!=='active') return;
+      const c = coins.find(x => x.id === id);
+      if (!c || c.status !== 'active') return;
       c.status = 'removed';
       addResult(`APLが${c.id}番を廃棄しました`);
-      awaitingPlayerDiscard = false;
 
-      // 本物損失数を通知
+      // 本物損失数を算出
       const lostA = c.type==='A' ? 2 : 1;
       addResult(`本物の損失数: ${lostA}個`);
 
+      awaitingPlayerDiscard = false;
       renderCoins();
       checkEndOrNext();
     }
 
     function checkEndOrNext() {
-      const alive = coins.filter(c=>c.status==='active');
-      const cntB = alive.filter(c=>c.type==='B').length;
-      const cntTotal = alive.length;
-      // 勝利判定
+      const alive = coins.filter(c => c.status==='active');
+      const cntB   = alive.filter(c => c.type==='B').length;
+      const cntTot = alive.length;
+
       if (cntB === 0) {
         addResult('🎉 あなたの勝利！偽物を全て廃棄しました');
         revealFakes();
         finishGame();
-      }
-      // 失敗判定 (B >= 半数)
-      else if (cntB*2 >= cntTotal) {
+      } else if (cntB * 2 >= cntTot) {
         addResult('💥 失敗！偽物が半数以上になりました');
         revealFakes();
         finishGame();
-      }
-      // 次ターンへ
-      else {
+      } else {
         selected.clear();
         lastWeighed = [];
         renderCoins();
@@ -293,7 +295,7 @@
     }
 
     function finishGame() {
-      weighBtn.disabled = true;
+      weighBtn.disabled    = true;
       clearSelBtn.disabled = true;
       hideGroupChoice();
       resetBtn.style.display = 'inline-block';
@@ -301,7 +303,7 @@
 
     resetBtn.onclick = init;
 
-    // 初期化
+    // ゲーム開始
     init();
   </script>
 </body>
