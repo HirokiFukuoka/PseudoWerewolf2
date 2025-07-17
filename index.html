@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>APL対CPU：計量器コインゲーム</title>
+  <title>PseudoWerewolf2</title>
   <style>
     body {
       font-family: sans-serif;
@@ -82,10 +82,13 @@
   </style>
 </head>
 <body>
-  <h1>APL対CPU：計量器コインゲーム</h1>
+  <h1>擬似人狼ゲーム2</h1>
   <div id="intro">
-    プレイヤー（APL）は計量器を使って重さを測定し、CPUが本物コインを廃棄、さらにプレイヤー自身もコインを廃棄します。  
-    7回以内に偽物を全て廃棄すれば勝利。偽物が残存コインの半数以上になると失敗です。
+    16枚のコインのうち12枚は本物、4枚は偽物です。本物は偽物よりも僅かに重いです。<br>
+    計量器には、コインを1枚から16枚乗せられます。<br>
+    計量器を使うたびに、本物コインが１枚消滅します(消滅するコインは、計量器の上にあるものか外にあるものかを選択できます)。<br>
+    次に、あなたは任意の１枚を廃棄します。<br>
+    7回以内に偽物を全廃棄できれば成功。偽物が残存コインの半数以上になると失敗です。
   </div>
 
   <div id="status">計量器使用: 0/7 (残り7回)</div>
@@ -255,7 +258,7 @@
       hideGroupChoice();
 
       awaitingPlayerDiscard = true;
-      addResult('APL、任意のコインを1つ廃棄してください');
+      addResult('任意のコインを1つ廃棄してください');
       renderCoins();
     }
 
@@ -263,7 +266,7 @@
       const c = coins.find(x => x.id === id);
       if (!c || c.status !== 'active') return;
       c.status = 'removed';
-      addResult(`APLが${c.id}番を廃棄しました`);
+      addResult(`あなたは${c.id}番を廃棄しました`);
 
       const lostA = c.type==='A' ? 2 : 1;
       addResult(`本物の損失数: ${lostA}個`);
@@ -279,7 +282,7 @@
       const cntTot = alive.length;
 
       if (cntB === 0) {
-        addResult('🎉 あなたの勝利！偽物を全て廃棄しました');
+        addResult('🎉 成功！偽物を全て廃棄しました');
         revealFakes();
         finishGame();
       } else if (cntB * 2 >= cntTot) {
