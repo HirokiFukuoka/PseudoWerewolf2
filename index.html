@@ -64,6 +64,10 @@
       text-align: center;
       margin: 10px 0;
     }
+    #group-choice p {
+      margin-bottom: 8px;
+      font-size: 1em;
+    }
     #group-choice button {
       margin: 0 10px;
       padding: 6px 10px;
@@ -94,6 +98,7 @@
   </div>
 
   <div id="group-choice" style="display:none;">
+    <p>CPUに対し、どこからコインを捨てるように指示しますか？</p>
     <button id="choose-on">計量器に乗せたコインから</button>
     <button id="choose-off">計量器の外のコインから</button>
   </div>
@@ -225,7 +230,6 @@
 
     function showGroupChoice() {
       groupDiv.style.display = 'block';
-      // CPUがどちらから廃棄できるか判定
       const onA  = lastWeighed.filter(id => coins.find(c=>c.id===id).type==='A').length;
       const offA = coins.filter(c=>c.status==='active' && !lastWeighed.includes(c.id) && c.type==='A').length;
       chooseOnBtn.disabled  = onA  === 0;
@@ -261,7 +265,6 @@
       c.status = 'removed';
       addResult(`APLが${c.id}番を廃棄しました`);
 
-      // 本物損失数を算出
       const lostA = c.type==='A' ? 2 : 1;
       addResult(`本物の損失数: ${lostA}個`);
 
@@ -302,8 +305,6 @@
     }
 
     resetBtn.onclick = init;
-
-    // ゲーム開始
     init();
   </script>
 </body>
